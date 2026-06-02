@@ -7,6 +7,10 @@ import authRoutes  from "./routes/authRoutes";
 import aiRoutes    from "./routes/aiRoutes";
 import resumeRoutes    from "./routes/resumeRoutes";
 import interviewRoutes from "./routes/interviewRoutes";
+import analyticsRoutes from "./routes/analyticsRoutes";
+import progressRoutes from "./routes/progressRoutes";
+import codeRoutes
+from "./routes/codeRoutes";
 
 dotenv.config();
 connectDB();
@@ -34,6 +38,21 @@ app.use(
     },
     credentials: true,
   })
+);
+
+app.use(
+  "/api/code",
+  codeRoutes
+);
+
+app.use(
+  "/api/progress",
+  progressRoutes
+);
+
+app.use(
+  "/api/analytics",
+  analyticsRoutes
 );
 
 // ── Body parsing ──────────────────────────────────────

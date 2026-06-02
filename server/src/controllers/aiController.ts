@@ -2,19 +2,26 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+import axios from "axios";
+
+import Analytics
+from "../models/Analytics";
+
+import Progress
+from "../models/Progress";
+
 import {
   Request,
   Response,
 } from "express";
 
-import {
-  GoogleGenerativeAI,
-} from "@google/generative-ai";
+const API_KEY =
+  process.env.GROQ_API_KEY;
 
-const genAI =
-  new GoogleGenerativeAI(
-    process.env.GEMINI_API_KEY || ""
-  );
+
+// ==============================
+// AI CODE REVIEW
+// ==============================
 
 export const reviewCode =
 async (
@@ -22,95 +29,166 @@ async (
   res: Response
 ) => {
 
-  console.log(
-    "AI ROUTE HIT"
-  );
-
   try {
 
     const { code } =
       req.body;
 
-    console.log(
-      "CODE RECEIVED:",
-      code
-    );
+    // ==========================
+    // GROQ API CALL
+    // ==========================
 
-    if (!code) {
+    const response =
+      await axios.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        {
 
-      return res.status(400).json({
-        success: false,
-        message:
-          "Code is required",
-      });
+          model:
+            "llama-3.1-8b-instant",
 
-    }
+          messages: [
+            {
 
-    const model =
-      genAI.getGenerativeModel({
-        model: "gemini-2.0-flash",
-      });
+              role: "user",
 
-    const prompt = `
-You are a senior software engineer.
-
+              content: `
 Analyze this code strictly.
 
 Provide:
-1. Code Quality Score (/100)
+
+1. Score (/100)
 2. Bugs
-3. Performance Issues
-4. Security Problems
-5. Best Practice Improvements
-6. Final Feedback
+3. Improvements
+4. Final Feedback
 
 Code:
 ${code}
-`;
+`,
 
-    console.log(
-      "Sending Gemini request..."
-    );
+            },
+          ],
 
-    const result =
-      await model.generateContent(
-        prompt
+        },
+
+        {
+          headers: {
+
+            Authorization:
+              `Bearer ${API_KEY}`,
+
+            "Content-Type":
+              "application/json",
+
+          },
+        }
       );
 
-    const aiResponse =
-      result.response.text();
+    // ==========================
+    // AI RESPONSE
+    // ==========================
 
-    console.log(
-      "GEMINI RESPONSE:"
+    const review =
+      response.data
+        .choices[0]
+        .message.content;
+
+    // ==========================
+    // EXTRACT SCORE
+    // ==========================
+
+    const scoreMatch =
+
+      review.match(
+        /(\d+)\s*\/\s*100/
+      ) ||
+
+      review.match(
+        /Score:\s*(\d+)/i
+      ) ||
+
+      review.match(
+        /(\d+)\s*out\s*of\s*100/i
+      );
+
+    const finalScore =
+
+      scoreMatch
+        ? parseInt(
+            scoreMatch[1]
+          )
+        : 50;
+
+    // ==========================
+    // SAVE ANALYTICS
+    // ==========================
+
+    await Analytics.create({
+
+      userId:
+        "demo-user",
+
+      type:
+        "code-review",
+
+      score:
+        finalScore,
+
+    });
+
+    // ==========================
+    // UPDATE PROGRESS
+    // ==========================
+
+    await Progress.findOneAndUpdate(
+
+      {
+        userId:
+          "demo-user",
+      },
+
+      {
+        $inc: {
+
+          questionsSolved: 1,
+
+          xp: 20,
+
+        },
+
+      },
+
+      {
+        upsert: true,
+      }
+
     );
 
-    console.log(aiResponse);
+    // ==========================
+    // SEND RESPONSE
+    // ==========================
 
-    res.status(200).json({
+    res.json({
+
       success: true,
-      review: aiResponse,
+
+      review,
+
+      score:
+        finalScore,
+
     });
 
   } catch (error: any) {
 
-    console.log(
-      "FULL GEMINI ERROR:"
-    );
-
     console.log(error);
 
-    console.log(
-      "ERROR MESSAGE:"
-    );
-
-    console.log(error.message);
-
     res.status(500).json({
+
       success: false,
-      message:
-        "AI Review Failed",
+
       error:
         error.message,
+
     });
 
   }
