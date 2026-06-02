@@ -1,6 +1,3 @@
-import {
-  evaluateAnswer,
-} from "../services/aiService";
 import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { 
