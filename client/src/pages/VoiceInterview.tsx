@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import { 
@@ -28,7 +29,6 @@ interface AnswerRecord {
 }
 
 const VoiceInterview = () => {
-  const navigate = useNavigate();
   const [interviewId, setInterviewId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<string[]>([
     "How do you approach designing scalable systems with high availability and fault tolerance?",
@@ -44,7 +44,6 @@ const VoiceInterview = () => {
   const [feedback, setFeedback] = useState("");
   const [currentScore, setCurrentScore] = useState<number | null>(null);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [micSupported, setMicSupported] = useState(true);
 
   // Session answers & final report
   const [answers, setAnswers] = useState<AnswerRecord[]>([]);
@@ -78,7 +77,6 @@ const VoiceInterview = () => {
       (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      setMicSupported(false);
       return;
     }
 
