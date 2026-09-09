@@ -17,7 +17,7 @@ import {
   Code2
 } from "lucide-react";
 import DashboardLayout from "../layouts/DashboardLayout";
-import { getDashboardStats, DashboardData } from "../services/dashboardService";
+import { getDashboardStats, type DashboardData } from "../services/dashboardService";
 
 const Dashboard = () => {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -209,7 +209,7 @@ const Dashboard = () => {
               />
             </div>
             <p className="text-[11px] text-zinc-500 mt-2">
-              {readinessScore !== null 
+              {readinessScore !== null && readinessScore !== undefined 
                 ? `${readinessScore >= 80 ? "Interview Ready" : readinessScore >= 60 ? "Moderate Readiness" : "Early Preparation"}`
                 : "Complete practice sessions to calculate"}
             </p>

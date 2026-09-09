@@ -10,7 +10,6 @@ import {
   Copy,
   Code2,
   AlertTriangle,
-  RotateCcw,
   Check
 } from "lucide-react";
 import toast from "react-hot-toast";

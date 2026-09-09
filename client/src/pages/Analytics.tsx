@@ -20,11 +20,10 @@ import {
   Brain,
   Target,
   Zap,
-  RotateCcw,
-  Sparkles
+  RotateCcw
 } from "lucide-react";
 import DashboardLayout from "../layouts/DashboardLayout";
-import { getAnalytics, AnalyticsData } from "../services/analyticsService";
+import { getAnalytics, type AnalyticsData } from "../services/analyticsService";
 
 const PIE_COLORS = ["#10b981", "#f59e0b", "#ef4444"];
 

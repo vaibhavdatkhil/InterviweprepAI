@@ -12,7 +12,7 @@ import {
   RotateCcw
 } from "lucide-react";
 import DashboardLayout from "../layouts/DashboardLayout";
-import { getProgress, ProgressData } from "../services/progressService";
+import { getProgress, type ProgressData } from "../services/progressService";
 
 const Progress = () => {
   const [data, setData] = useState<ProgressData | null>(null);
