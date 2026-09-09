@@ -31,10 +31,21 @@ export const analyzeResume = async (req: AuthRequest, res: Response) => {
       console.error("PDF parse failed:", parseError);
       // Clean up temp file
       try { fs.unlinkSync(file.path); } catch {}
-      return res.status(400).json({
+      return res.status(200).json({
+        success: false,
+        status: "Invalid / Unreadable Document",
         message: "Unable to analyze this PDF. No readable text could be extracted.",
         atsScore: 0,
         skills: [],
+        missingSkills: [],
+        categoryScores: {
+          skillsMatch: { score: 0, max: 35 },
+          experience: { score: 0, max: 20 },
+          projects: { score: 0, max: 15 },
+          education: { score: 0, max: 10 },
+          keywords: { score: 0, max: 10 },
+          structure: { score: 0, max: 10 },
+        },
         suggestions: [
           "Unable to extract text from the uploaded PDF document.",
           "Ensure the document is a text-selectable PDF and not an encrypted file or image scan.",
@@ -89,9 +100,12 @@ export const analyzeResume = async (req: AuthRequest, res: Response) => {
       success: true,
       analysisId: savedRecord._id,
       atsScore: analysis.atsScore,
+      status: analysis.isValidResume ? "Valid Resume" : "Invalid / Unreadable Document",
       isValidResume: analysis.isValidResume,
       wordCount: analysis.wordCount,
       skills: analysis.skills,
+      missingSkills: analysis.missingSkills,
+      targetRole: req.body.targetRole || "Software Engineer",
       sectionsFound: analysis.sectionsFound,
       categoryScores: analysis.categoryScores,
       suggestions: analysis.suggestions,

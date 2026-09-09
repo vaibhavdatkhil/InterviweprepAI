@@ -22,15 +22,22 @@ export const runCode = async (req: AuthRequest, res: Response) => {
       3000
     );
 
+    const effectiveOutput = timedOut ? "Execution timed out (3000ms limit)." : stdout || stderr || "";
+
     res.json({
+      success: !timedOut && !stderr,
+      output: effectiveOutput,
+      stdout,
+      stderr,
+      executionTimeMs: runtimeMs,
+      runtimeMs,
+      timedOut,
       run: {
         stdout,
         stderr,
-        output: timedOut ? "Execution timed out (3000ms limit)." : stdout || stderr,
+        output: effectiveOutput,
         code: timedOut ? 124 : stderr ? 1 : 0,
       },
-      runtimeMs,
-      timedOut,
     });
   } catch (error: any) {
     console.error("runCode error:", error);
@@ -161,8 +168,10 @@ export const submitSolution = async (req: AuthRequest, res: Response) => {
       error: execution.error,
       runtimeMs: execution.runtimeMs,
       passedTests: execution.passedTests,
+      totalPassed: execution.passedTests,
       totalTests: execution.totalTests,
       testResults: execution.testResults,
+      results: execution.testResults,
       updatedProgress,
     });
   } catch (error: any) {

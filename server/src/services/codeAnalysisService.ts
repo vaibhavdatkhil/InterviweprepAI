@@ -28,34 +28,26 @@ export const analyzeCodeLocally = (language: string, code: string): CodeAnalysis
   let spaceComplexity = "O(1)";
 
   if (normLang === "python" || normLang === "py") {
-    // 1. Python Syntax Validation via python ast
-    const checkScript = `
-import ast, sys
-
-code = sys.stdin.read()
-try:
-    tree = ast.parse(code)
-except SyntaxError as e:
-    print(f"SyntaxError on line {e.lineno}: {e.msg} -> '{e.text.strip() if e.text else ''}'")
-    sys.exit(1)
-except Exception as e:
-    print(f"Error: {str(e)}")
-    sys.exit(1)
-`;
-
+    // 1. Python Syntax Validation via python -m py_compile
+    const tempFile = path.join(os.tmpdir(), `syntax_check_${Date.now()}_${Math.random().toString(36).substring(7)}.py`);
     try {
-      execSync("python -c \"" + checkScript.replace(/"/g, '\\"') + "\"", {
-        input: code,
-        timeout: 2500,
+      fs.writeFileSync(tempFile, code, "utf8");
+      execSync(`python -m py_compile "${tempFile}"`, {
+        timeout: 3000,
         encoding: "utf8",
         stdio: ["pipe", "pipe", "pipe"],
       });
       syntaxValid = true;
     } catch (err: any) {
       syntaxValid = false;
-      const errMsg = (err.stdout || err.stderr || err.message).trim();
-      const firstLine = errMsg.split("\n")[0];
-      syntaxErrors.push(firstLine || "Python SyntaxError: code failed to parse.");
+      const stderr = (err.stderr || err.stdout || err.message || "").toString().trim();
+      const lines = stderr.split("\n").filter((l: string) => l.trim().length > 0);
+      const syntaxLine = lines.find((l: string) => l.includes("SyntaxError")) || lines[lines.length - 1] || "SyntaxError: invalid syntax";
+      syntaxErrors.push(syntaxLine.trim());
+    } finally {
+      try {
+        if (fs.existsSync(tempFile)) fs.unlinkSync(tempFile);
+      } catch {}
     }
 
     // 2. Python Semantic Checks (e.g. input() string compared to int)

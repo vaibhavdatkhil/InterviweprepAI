@@ -66,10 +66,14 @@ export const getProgress = async (req: AuthRequest, res: Response) => {
     }
 
     res.json({
+      currentStreak: progress.currentStreak,
       streak: progress.currentStreak,
       longestStreak: progress.longestStreak,
+      totalXP: progress.xp,
       xp: progress.xp,
+      problemsSolved: progress.questionsSolved,
       questionsSolved: progress.questionsSolved,
+      mockSessions: progress.interviewsCompleted,
       interviews: progress.interviewsCompleted,
       weeklyActivity: past7Days,
       achievements: progress.achievements,

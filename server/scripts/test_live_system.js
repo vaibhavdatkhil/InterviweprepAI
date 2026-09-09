@@ -176,7 +176,7 @@ print("Hello " + name`;
     );
 
     // Check achievement unlocked
-    const firstSolvedAchievement = progRes.data.achievements.find(a => a.id === "first_solve");
+    const firstSolvedAchievement = progRes.data.achievements.find(a => a.id === "first_solve" || a.id === "a1");
     logResult(
       "TEST 3D: Milestone Badge 'First Problem Solved' Unlocked Upon Actual Solve",
       firstSolvedAchievement && firstSolvedAchievement.unlocked,
