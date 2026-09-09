@@ -9,7 +9,6 @@ import {
   Lock,
   Unlock,
   Calendar,
-  Sparkles,
   Trophy,
 } from "lucide-react";
 import DashboardLayout from "../layouts/DashboardLayout";

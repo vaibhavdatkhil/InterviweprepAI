@@ -23,3 +23,10 @@ export const loginUser = async (data: {
   const response = await authAPI.post("/login", data);
   return response.data;
 };
+
+export const getCurrentUser = async (token: string) => {
+  const response = await authAPI.get("/me", {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return response.data;
+};

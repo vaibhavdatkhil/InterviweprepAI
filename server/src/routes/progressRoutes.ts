@@ -1,15 +1,10 @@
 import express from "express";
+import { getProgress } from "../controllers/progressController";
+import verifyToken from "../middleware/authMiddleware";
 
-import {
-  getProgress,
-} from "../controllers/progressController";
+const router = express.Router();
 
-const router =
-  express.Router();
-
-router.get(
-  "/",
-  getProgress
-);
+// GET /api/progress (authenticated real user progress)
+router.get("/", verifyToken, getProgress);
 
 export default router;

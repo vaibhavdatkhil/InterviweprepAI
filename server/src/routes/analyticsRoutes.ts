@@ -1,15 +1,10 @@
 import express from "express";
+import { getAnalytics } from "../controllers/analyticsController";
+import verifyToken from "../middleware/authMiddleware";
 
-import {
-  getAnalytics,
-} from "../controllers/analyticsController";
+const router = express.Router();
 
-const router =
-  express.Router();
-
-router.get(
-  "/",
-  getAnalytics
-);
+// GET /api/analytics (authenticated real user analytics)
+router.get("/", verifyToken, getAnalytics);
 
 export default router;

@@ -1,15 +1,13 @@
 import express from "express";
+import { reviewCode, getLatestReview } from "../controllers/aiController";
+import verifyToken from "../middleware/authMiddleware";
 
-import {
-  reviewCode,
-} from "../controllers/aiController";
+const router = express.Router();
 
-const router =
-  express.Router();
+// POST /api/ai/review (authenticated real code review)
+router.post("/review", verifyToken, reviewCode);
 
-router.post(
-  "/review",
-  reviewCode
-);
+// GET /api/ai/latest-review (fetch latest review from database)
+router.get("/latest-review", verifyToken, getLatestReview);
 
 export default router;

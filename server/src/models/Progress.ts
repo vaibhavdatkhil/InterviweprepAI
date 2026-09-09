@@ -1,40 +1,53 @@
 import mongoose from "mongoose";
 
-const progressSchema =
-  new mongoose.Schema({
-
-    userId: String,
-
+const progressSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      unique: true,
+      index: true,
+    },
     questionsSolved: {
       type: Number,
       default: 0,
     },
-
-    interviews: {
+    solvedProblemIds: {
+      type: [String],
+      default: [],
+    },
+    interviewsCompleted: {
       type: Number,
       default: 0,
     },
-
     xp: {
       type: Number,
       default: 0,
     },
-
-    streak: {
+    currentStreak: {
       type: Number,
       default: 0,
     },
-
-    weeklyActivity: [
+    longestStreak: {
+      type: Number,
+      default: 0,
+    },
+    lastActiveDate: {
+      type: Date,
+      default: null,
+    },
+    achievements: [
       {
-        day: String,
-        solved: Number,
+        id: String,
+        label: String,
+        icon: String,
+        unlocked: { type: Boolean, default: false },
+        unlockedAt: { type: Date, default: null },
       },
     ],
-
-  });
-
-export default mongoose.model(
-  "Progress",
-  progressSchema
+  },
+  { timestamps: true }
 );
+
+export default mongoose.model("Progress", progressSchema);

@@ -6,7 +6,6 @@ import {
   Search,
   LogOut,
   Menu,
-  CheckCircle2,
   Sparkles,
   Sliders,
   Moon,

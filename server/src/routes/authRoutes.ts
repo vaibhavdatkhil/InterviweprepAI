@@ -4,14 +4,17 @@ import {
   validateRegister,
   validateLogin,
 } from "../middleware/validationMiddleware";
+import verifyToken from "../middleware/authMiddleware";
 
 const router = express.Router();
 
 // POST /api/auth/register
-// validateRegister runs first — bad input is rejected before hitting the DB
 router.post("/register", validateRegister, authController.registerUser);
 
 // POST /api/auth/login
 router.post("/login", validateLogin, authController.loginUser);
+
+// GET /api/auth/me (session revalidation)
+router.get("/me", verifyToken, authController.getMe);
 
 export default router;

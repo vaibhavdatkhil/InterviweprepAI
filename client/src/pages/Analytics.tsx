@@ -11,8 +11,6 @@ import {
   Pie,
   Cell,
   CartesianGrid,
-  BarChart,
-  Bar,
 } from "recharts";
 import { motion } from "framer-motion";
 import {

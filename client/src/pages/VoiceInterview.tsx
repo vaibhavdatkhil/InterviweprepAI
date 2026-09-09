@@ -10,17 +10,44 @@ import {
   Volume2,
   RotateCcw,
   CheckCircle2,
-  Award
 } from "lucide-react";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { VOICE_QUESTIONS } from "../data";
 import api from "../services/api";
 import { evaluateAnswer } from "../services/aiService";
 
+const TRACK_QUESTIONS: Record<string, string[]> = {
+  frontend: [
+    "How do you manage global state in a complex React application, and when would you choose Context API over Zustand or Redux?",
+    "Can you explain JavaScript closures and how they can be used to emulate private variables or methods?",
+    "How does the browser rendering engine work, and how does React's reconciliation algorithm optimize DOM updates?",
+    "What are the core differences between CSS Grid and Flexbox, and how do you optimize Largest Contentful Paint (LCP)?",
+    "Walk me through how you would architect a reusable component library with TypeScript and accessibility (a11y) standards.",
+  ],
+  backend: [
+    "Explain the Node.js event loop: libuv, microtask queue vs macrotask queue, and non-blocking I/O.",
+    "When designing a high-throughput system, how do you decide between relational SQL and NoSQL document stores?",
+    "How do database indexing strategies (B-Trees, Composite Indexes) improve read queries, and what is their write penalty?",
+    "Describe how you implement stateless authentication with JWT, refresh token rotation, and API rate limiting.",
+    "How would you design a distributed caching layer using Redis to prevent cache stampedes?",
+  ],
+  dsa: [
+    "Walk me through how you analyze the amortized time complexity of dynamic array resizing or union-find operations.",
+    "Explain how you decide whether to solve an optimization problem using Dynamic Programming vs a Greedy approach.",
+    "What are the advantages of using a Min-Heap / Priority Queue in finding top-K frequent elements compared to quicksort?",
+    "How do BFS and DFS differ in graph traversal memory consumption, and how do you detect cycles in directed graphs?",
+    "Can you explain the invariant conditions of Binary Search and how to avoid off-by-one errors in rotated sorted arrays?",
+  ],
+  hr: [
+    "Tell me about yourself and walk me through your engineering journey and most proud accomplishment.",
+    "Describe a time you had a technical disagreement with a teammate or lead. How did you resolve it?",
+    "Tell me about a challenging production bug or outage you handled under pressure and what post-mortem lessons you took away.",
+    "Why are you interested in joining our engineering team, and where do you see your technical trajectory in three years?",
+  ],
+};
+
 const VoiceInterview = () => {
-  const [questions, setQuestions] = useState<string[]>(
-    VOICE_QUESTIONS.map(q => q.text)
-  );
+  const [questions, setQuestions] = useState<string[]>(VOICE_QUESTIONS.map(q => q.text));
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState("");
@@ -31,8 +58,15 @@ const VoiceInterview = () => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const recognitionRef = useRef<any>(null);
 
-  // Load questions dynamically based on resume
+  // Load questions dynamically based on selected track or resume
   useEffect(() => {
+    const track = localStorage.getItem("selected_interview_track");
+    if (track && TRACK_QUESTIONS[track]) {
+      setQuestions(TRACK_QUESTIONS[track]);
+      toast.success(`Loaded questions for ${track.toUpperCase()} Track!`);
+      return;
+    }
+
     const fetchQuestions = async () => {
       const savedResume = localStorage.getItem("resume_analysis");
       if (savedResume) {

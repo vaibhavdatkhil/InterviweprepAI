@@ -1,45 +1,56 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import User from "../models/User";
 
-// Extend Express Request so downstream controllers
-// can read req.userId without a type error.
 export interface AuthRequest extends Request {
   userId?: string;
+  user?: any;
 }
 
-const verifyToken = (
+const verifyToken = async (
   req: AuthRequest,
   res: Response,
   next: NextFunction
 ) => {
-  const authHeader = req.headers.authorization;
-
-  // Expect:  Authorization: Bearer <token>
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({
-      message: "Access denied. No token provided.",
-    });
-  }
-
-  const token = authHeader.split(" ")[1];
-
-  if (token === "demo-offline-jwt-token") {
-    req.userId = "60c72b2f9b1d8e1f88c67999"; // mock ObjectId
-    return next();
-  }
-
   try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET as string
-    ) as { id: string };
+    const authHeader = req.headers.authorization;
 
-    req.userId = decoded.id;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({
+        message: "Access denied. Authentication token required.",
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+    if (!token || token === "demo-offline-jwt-token" || token === "null" || token === "undefined") {
+      return res.status(401).json({
+        message: "Invalid session. Please log in with a valid account.",
+      });
+    }
+
+    const secret = process.env.JWT_SECRET || "supersecretkey";
+    const decoded = jwt.verify(token, secret) as { id: string };
+
+    if (!decoded || !decoded.id) {
+      return res.status(401).json({
+        message: "Malformed authentication token.",
+      });
+    }
+
+    // Verify user exists in database
+    const user = await User.findById(decoded.id).select("-password");
+    if (!user) {
+      return res.status(401).json({
+        message: "User account not found. Please log in again.",
+      });
+    }
+
+    req.userId = user._id.toString();
+    req.user = user;
     next();
-
-  } catch (error) {
+  } catch (error: any) {
     return res.status(401).json({
-      message: "Invalid or expired token.",
+      message: "Session expired or invalid. Please sign in again.",
     });
   }
 };
