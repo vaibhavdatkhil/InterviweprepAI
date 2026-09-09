@@ -37,13 +37,9 @@ const Signup = () => {
       localStorage.setItem("token", data.token);
       toast.success("Account Created Successfully! Welcome.");
       navigate("/dashboard");
-    } catch (error) {
-      console.warn("Backend server connection failed, entering offline demo mode.", error);
-      toast.success("Offline Demo Mode: Creating account...");
-      localStorage.setItem("token", "demo-offline-jwt-token");
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 800); // 800ms delay
+    } catch (error: any) {
+      const msg = error.response?.data?.message || "Registration failed. Please check server connection.";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

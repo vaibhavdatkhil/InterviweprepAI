@@ -10,8 +10,11 @@ const ProtectedRoute = ({
 
   const token = localStorage.getItem("token");
 
-  if (!token) {
-    return <Navigate to="/login" />;
+  if (!token || token === "demo-offline-jwt-token") {
+    if (token === "demo-offline-jwt-token") {
+      localStorage.removeItem("token");
+    }
+    return <Navigate to="/login" replace />;
   }
 
   return children;

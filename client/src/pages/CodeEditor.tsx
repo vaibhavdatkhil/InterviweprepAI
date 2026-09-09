@@ -9,38 +9,63 @@ import {
   Copy,
   CheckCircle2,
   XCircle,
+  Clock,
+  AlertCircle
 } from "lucide-react";
 import toast from "react-hot-toast";
-import api from "../services/api";
 import DashboardLayout from "../layouts/DashboardLayout";
-import { DSA_QUESTIONS } from "../data";
+import { runCode, submitCode } from "../services/codeService";
 
-const LANGUAGE_TEMPLATES: Record<string, string> = {
-  javascript: `/**
- * Problem: Two Sum
- * Given an array of integers nums and an integer target, return indices of the two numbers.
+interface ProblemDef {
+  id: string;
+  title: string;
+  difficulty: "Easy" | "Medium" | "Hard";
+  company: string;
+  description: string;
+  example: { input: string; output: string; explanation?: string };
+  constraints: string[];
+  tags: string[];
+  starterCode: Record<string, string>;
+}
+
+const PROBLEMS: ProblemDef[] = [
+  {
+    id: "q1",
+    title: "Two Sum",
+    difficulty: "Easy",
+    company: "Google",
+    description: "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice.",
+    example: {
+      input: "nums = [2, 7, 11, 15], target = 9",
+      output: "[0, 1]",
+      explanation: "Because nums[0] + nums[1] == 9, we return [0, 1]."
+    },
+    constraints: [
+      "2 <= nums.length <= 10^4",
+      "-10^9 <= nums[i] <= 10^9",
+      "Only one valid answer exists."
+    ],
+    tags: ["Array", "Hash Table"],
+    starterCode: {
+      javascript: `/**
  * @param {number[]} nums
  * @param {number} target
  * @return {number[]}
  */
 function twoSum(nums, target) {
-  const map = new Map();
-  for (let i = 0; i < nums.length; i++) {
-    const complement = target - nums[i];
-    if (map.has(complement)) {
-      return [map.get(complement), i];
+    const map = new Map();
+    for (let i = 0; i < nums.length; i++) {
+        const comp = target - nums[i];
+        if (map.has(comp)) {
+            return [map.get(comp), i];
+        }
+        map.set(nums[i], i);
     }
-    map.set(nums[i], i);
-  }
-  return [];
+    return [];
 }
 
-// Test Run
-console.log("Result:", twoSum([2, 7, 11, 15], 9));
-`,
-  python: `# Problem: Two Sum
-# Given an array of integers nums and an integer target, return indices of the two numbers.
-def two_sum(nums, target):
+console.log(twoSum([2, 7, 11, 15], 9));`,
+      python: `def two_sum(nums, target):
     lookup = {}
     for i, num in enumerate(nums):
         diff = target - num
@@ -49,127 +74,186 @@ def two_sum(nums, target):
         lookup[num] = i
     return []
 
-print("Result:", two_sum([2, 7, 11, 15], 9))
-`,
-  typescript: `function twoSum(nums: number[], target: number): number[] {
-  const map = new Map<number, number>();
-  for (let i = 0; i < nums.length; i++) {
-    const complement = target - nums[i];
-    if (map.has(complement)) {
-      return [map.get(complement)!, i];
+print(two_sum([2, 7, 11, 15], 9))`,
     }
-    map.set(nums[i], i);
+  },
+  {
+    id: "q4",
+    title: "Valid Parentheses",
+    difficulty: "Easy",
+    company: "Meta",
+    description: "Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid. Open brackets must be closed by the same type of brackets in the correct order.",
+    example: {
+      input: 's = "()[]{}"',
+      output: "true",
+      explanation: "All opening brackets are closed by matching closing brackets."
+    },
+    constraints: [
+      "1 <= s.length <= 10^4",
+      "s consists of parentheses only '()[]{}'."
+    ],
+    tags: ["Stack", "String"],
+    starterCode: {
+      javascript: `/**
+ * @param {string} s
+ * @return {boolean}
+ */
+function isValid(s) {
+    const stack = [];
+    const map = { ')': '(', '}': '{', ']': '[' };
+    for (let ch of s) {
+        if (ch === '(' || ch === '{' || ch === '[') {
+            stack.push(ch);
+        } else {
+            if (stack.pop() !== map[ch]) return false;
+        }
+    }
+    return stack.length === 0;
+}
+
+console.log(isValid("()[]{}"));`,
+      python: `def is_valid(s: str) -> bool:
+    stack = []
+    mapping = {")": "(", "}": "{", "]": "["}
+    for char in s:
+        if char in mapping:
+            top = stack.pop() if stack else '#'
+            if mapping[char] != top:
+                return False
+        else:
+            stack.append(char)
+    return not stack
+
+print(is_valid("()[]{}"))`,
+    }
+  },
+  {
+    id: "q2",
+    title: "Longest Substring Without Repeating Characters",
+    difficulty: "Medium",
+    company: "Amazon",
+    description: "Given a string s, find the length of the longest substring without repeating characters.",
+    example: {
+      input: 's = "abcabcbb"',
+      output: "3",
+      explanation: 'The answer is "abc", with the length of 3.'
+    },
+    constraints: [
+      "0 <= s.length <= 5 * 10^4",
+      "s consists of English letters, digits, symbols and spaces."
+    ],
+    tags: ["Hash Table", "String", "Sliding Window"],
+    starterCode: {
+      javascript: `/**
+ * @param {string} s
+ * @return {number}
+ */
+function lengthOfLongestSubstring(s) {
+    let set = new Set();
+    let left = 0;
+    let maxLen = 0;
+    for (let right = 0; right < s.length; right++) {
+        while (set.has(s[right])) {
+            set.delete(s[left]);
+            left++;
+        }
+        set.add(s[right]);
+        maxLen = Math.max(maxLen, right - left + 1);
+    }
+    return maxLen;
+}
+
+console.log(lengthOfLongestSubstring("abcabcbb"));`,
+      python: `def length_of_longest_substring(s: str) -> int:
+    char_set = set()
+    left = 0
+    res = 0
+    for right in range(len(s)):
+        while s[right] in char_set:
+            char_set.remove(s[left])
+            left += 1
+        char_set.add(s[right])
+        res = max(res, right - left + 1)
+    return res
+
+print(length_of_longest_substring("abcabcbb"))`,
+    }
   }
-  return [];
-}
-
-console.log("Result:", twoSum([2, 7, 11, 15], 9));
-`,
-  cpp: `#include <iostream>
-#include <vector>
-#include <unordered_map>
-
-std::vector<int> twoSum(std::vector<int>& nums, int target) {
-    std::unordered_map<int, int> map;
-    for (int i = 0; i < nums.size(); i++) {
-        int complement = target - nums[i];
-        if (map.find(complement) != map.end()) {
-            return {map[complement], i};
-        }
-        map[nums[i]] = i;
-    }
-    return {};
-}
-
-int main() {
-    std::cout << "Two Sum C++ Solution Ready" << std::endl;
-    return 0;
-}
-`,
-  java: `import java.util.HashMap;
-import java.util.Map;
-
-public class Solution {
-    public int[] twoSum(int[] nums, int target) {
-        Map<Integer, Integer> map = new HashMap<>();
-        for (int i = 0; i < nums.length; i++) {
-            int complement = target - nums[i];
-            if (map.containsKey(complement)) {
-                return new int[] { map.get(complement), i };
-            }
-            map.put(nums[i], i);
-        }
-        return new int[] {};
-    }
-}
-`,
-};
+];
 
 const CodeEditor = () => {
-  const [selectedQuestion, setSelectedQuestion] = useState(DSA_QUESTIONS[0]);
-  const [language, setLanguage] = useState("javascript");
-  const [code, setCode] = useState(LANGUAGE_TEMPLATES["javascript"]);
+  const [selectedQuestion, setSelectedQuestion] = useState<ProblemDef>(PROBLEMS[0]);
+  const [language, setLanguage] = useState<string>("javascript");
+  const [code, setCode] = useState<string>(PROBLEMS[0].starterCode["javascript"]);
   const [consoleLogs, setConsoleLogs] = useState<string[]>([
-    "PrepAI Virtual Sandbox v2.0",
-    "Ready to compile and run your code.",
+    "PrepAI Execution Console",
+    "Select Run Code to test your current script or Submit Solution to evaluate against test cases.",
   ]);
   const [isRunning, setIsRunning] = useState(false);
-  const [testResult, setTestResult] = useState<"idle" | "passed" | "failed">("idle");
+  const [submissionStatus, setSubmissionStatus] = useState<"idle" | "Accepted" | "Wrong Answer" | "Runtime Error">("idle");
+  const [lastRuntimeMs, setLastRuntimeMs] = useState<number | null>(null);
+
+  const handleQuestionChange = (qId: string) => {
+    const q = PROBLEMS.find((item) => item.id === qId);
+    if (q) {
+      setSelectedQuestion(q);
+      const newCode = q.starterCode[language] || q.starterCode["javascript"] || "";
+      setCode(newCode);
+      setSubmissionStatus("idle");
+      setLastRuntimeMs(null);
+      setConsoleLogs([
+        `Switched problem to: ${q.title} (${q.difficulty})`,
+        "Ready to run or submit solution."
+      ]);
+    }
+  };
 
   const handleLanguageChange = (newLang: string) => {
     setLanguage(newLang);
-    setCode(LANGUAGE_TEMPLATES[newLang] || "// Write your code here");
-    setTestResult("idle");
+    const newCode = selectedQuestion.starterCode[newLang] || `// Write your ${newLang} solution here\n`;
+    setCode(newCode);
+    setSubmissionStatus("idle");
+    setLastRuntimeMs(null);
     setConsoleLogs([`Switched environment to ${newLang.toUpperCase()}`]);
   };
 
   const handleRun = async () => {
     try {
       setIsRunning(true);
-      setConsoleLogs(["[INFO] Compiling and running code...", ""]);
+      setConsoleLogs(["[INFO] Executing code in isolated sandbox...", ""]);
 
-      let runOutput = "";
-      try {
-        const response = await api.post("/code/run", {
-          language,
-          code,
-        });
-        runOutput = response?.data?.run?.output || response?.data?.output || "";
-      } catch (backendErr) {
-        console.warn("Backend compiler offline, simulating browser execution.", backendErr);
+      const res = await runCode({ language, code });
+      const timeMs = res.executionTimeMs ?? 0;
+      setLastRuntimeMs(timeMs);
+
+      const logs: string[] = [
+        `[STATUS] Process finished in ${timeMs}ms (Exit: ${res.success ? "0" : "1"})`,
+        ""
+      ];
+
+      if (res.output) {
+        logs.push("[OUTPUT]");
+        logs.push(res.output);
+      }
+      if (res.error) {
+        logs.push("[STDERR / ERROR]");
+        logs.push(res.error);
+      }
+      if (!res.output && !res.error) {
+        logs.push("Code executed successfully with no stdout output.");
       }
 
-      if (!runOutput) {
-        // Client-side execution simulation for JS/TS
-        if (language === "javascript" || language === "typescript") {
-          try {
-            const logs: string[] = [];
-            const customConsole = {
-              log: (...args: any[]) => logs.push(args.map(a => typeof a === "object" ? JSON.stringify(a) : String(a)).join(" ")),
-              error: (...args: any[]) => logs.push("[ERROR] " + args.join(" ")),
-              warn: (...args: any[]) => logs.push("[WARN] " + args.join(" ")),
-            };
-            const runner = new Function("console", code);
-            runner(customConsole);
-            runOutput = logs.length > 0 ? logs.join("\n") : "Code executed successfully with no stdout.";
-          } catch (execErr: any) {
-            runOutput = `Runtime Error: ${execErr.message}`;
-          }
-        } else {
-          runOutput = `[${language.toUpperCase()} Output]: Process exited with code 0.\nProgram output matches algorithm invariants.`;
-        }
+      setConsoleLogs(logs);
+      if (res.success) {
+        toast.success("Code executed!");
+      } else {
+        toast.error("Execution produced errors.");
       }
-
-      setConsoleLogs([
-        `[SUCCESS] Execution finished in 28ms`,
-        "",
-        runOutput,
-      ]);
-      toast.success("Code executed!");
     } catch (error: any) {
+      const errMsg = error.response?.data?.error || error.response?.data?.message || error.message || "Execution unavailable";
       setConsoleLogs([
-        "[ERROR] Execution failed",
-        error?.message || "Unknown runtime exception",
+        "[ERROR] Sandbox execution failed",
+        errMsg,
       ]);
       toast.error("Execution failed");
     } finally {
@@ -180,37 +264,51 @@ const CodeEditor = () => {
   const handleSubmit = async () => {
     try {
       setIsRunning(true);
-      setConsoleLogs(["[INFO] Evaluating solution across hidden test cases...", ""]);
+      setConsoleLogs(["[INFO] Running submitted code against problem test cases...", ""]);
 
-      setTimeout(() => {
-        // Verify solution logic
-        const passes = !code.includes("TODO") && (code.includes("map") || code.includes("Map") || code.includes("return"));
-        if (passes) {
-          setTestResult("passed");
-          setConsoleLogs([
-            "[TEST CASE 1] Passed (input: nums=[2,7,11,15], target=9 -> output: [0,1])",
-            "[TEST CASE 2] Passed (input: nums=[3,2,4], target=6 -> output: [1,2])",
-            "[TEST CASE 3] Passed (input: nums=[3,3], target=6 -> output: [0,1])",
-            "",
-            "🎉 All test cases passed successfully!",
-            "Runtime: 42ms (Faster than 89.4% of submissions)",
-            "Memory: 43.8 MB (Less than 76.2% of submissions)",
-          ]);
-          toast.success("Accepted! All test cases passed.");
-        } else {
-          setTestResult("failed");
-          setConsoleLogs([
-            "[TEST CASE 1] Failed",
-            "Expected output [0,1], received empty array or syntax error.",
-            "Review your algorithm logic and boundary conditions.",
-          ]);
-          toast.error("Wrong Answer or Incomplete Logic.");
-        }
-        setIsRunning(false);
-      }, 700);
+      const res = await submitCode({
+        language,
+        code,
+        problemId: selectedQuestion.id
+      });
+
+      setSubmissionStatus(res.status);
+      setLastRuntimeMs(res.runtimeMs);
+
+      const logs: string[] = [
+        `[SUBMISSION RESULT] ${res.status.toUpperCase()}`,
+        `Tests Passed: ${res.totalPassed} / ${res.totalTests}`,
+        `Execution Runtime: ${res.runtimeMs}ms`,
+        ""
+      ];
+
+      if (res.results && Array.isArray(res.results)) {
+        res.results.forEach((test: any) => {
+          if (test.passed) {
+            logs.push(`✓ Test Case ${test.testIndex + 1}: Passed`);
+          } else {
+            logs.push(`✗ Test Case ${test.testIndex + 1}: Failed`);
+            if (test.input) logs.push(`  Input: ${test.input}`);
+            if (test.expected) logs.push(`  Expected: ${test.expected}`);
+            if (test.actual) logs.push(`  Actual Output: ${test.actual}`);
+            if (test.error) logs.push(`  Error: ${test.error}`);
+          }
+        });
+      }
+
+      setConsoleLogs(logs);
+
+      if (res.status === "Accepted") {
+        toast.success("Accepted! All test cases passed and progress recorded.");
+      } else {
+        toast.error(`Submission: ${res.status}`);
+      }
     } catch (error: any) {
-      setIsRunning(false);
+      const errMsg = error.response?.data?.message || "Submission failed. Please check backend connection.";
+      setConsoleLogs(["[ERROR] Submission evaluation failed", errMsg]);
       toast.error("Submission failed");
+    } finally {
+      setIsRunning(false);
     }
   };
 
@@ -220,9 +318,11 @@ const CodeEditor = () => {
   };
 
   const resetCode = () => {
-    setCode(LANGUAGE_TEMPLATES[language] || "");
+    const starter = selectedQuestion.starterCode[language] || "";
+    setCode(starter);
+    setSubmissionStatus("idle");
+    setLastRuntimeMs(null);
     setConsoleLogs(["Editor reset to starter template."]);
-    setTestResult("idle");
     toast.success("Reset to template.");
   };
 
@@ -239,13 +339,10 @@ const CodeEditor = () => {
               </span>
               <select
                 value={selectedQuestion.id}
-                onChange={(e) => {
-                  const q = DSA_QUESTIONS.find((item) => item.id === e.target.value);
-                  if (q) setSelectedQuestion(q);
-                }}
+                onChange={(e) => handleQuestionChange(e.target.value)}
                 className="w-full bg-zinc-950 border border-zinc-800 text-zinc-200 text-sm font-semibold rounded-xl px-3.5 py-2.5 outline-none hover:border-zinc-700 cursor-pointer"
               >
-                {DSA_QUESTIONS.map((q) => (
+                {PROBLEMS.map((q) => (
                   <option key={q.id} value={q.id}>
                     {q.title} ({q.difficulty})
                   </option>
@@ -275,19 +372,21 @@ const CodeEditor = () => {
               <div>
                 <h3 className="text-lg font-bold text-zinc-100">{selectedQuestion.title}</h3>
                 <p className="text-xs text-zinc-400 mt-2 leading-relaxed">
-                  Given an array of integers <code className="text-violet-400 font-mono">nums</code> and an integer <code className="text-violet-400 font-mono">target</code>, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution.
+                  {selectedQuestion.description}
                 </p>
               </div>
 
-              {/* Examples */}
+              {/* Example */}
               <div className="space-y-2">
                 <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">
                   Example 1:
                 </span>
                 <div className="p-3 bg-zinc-950/60 rounded-xl border border-zinc-850 text-xs font-mono space-y-1">
-                  <div className="text-zinc-400"><strong>Input:</strong> nums = [2,7,11,15], target = 9</div>
-                  <div className="text-zinc-200"><strong>Output:</strong> [0,1]</div>
-                  <div className="text-zinc-500 text-[11px]">Explanation: nums[0] + nums[1] == 9, we return [0, 1].</div>
+                  <div className="text-zinc-400"><strong>Input:</strong> {selectedQuestion.example.input}</div>
+                  <div className="text-zinc-200"><strong>Output:</strong> {selectedQuestion.example.output}</div>
+                  {selectedQuestion.example.explanation && (
+                    <div className="text-zinc-500 text-[11px]">{selectedQuestion.example.explanation}</div>
+                  )}
                 </div>
               </div>
 
@@ -297,9 +396,9 @@ const CodeEditor = () => {
                   Constraints:
                 </span>
                 <ul className="text-xs text-zinc-500 space-y-1 font-mono list-disc list-inside">
-                  <li>2 &le; nums.length &le; 10⁴</li>
-                  <li>-10⁹ &le; nums[i] &le; 10⁹</li>
-                  <li>Only one valid answer exists.</li>
+                  {selectedQuestion.constraints.map((c, i) => (
+                    <li key={i}>{c}</li>
+                  ))}
                 </ul>
               </div>
 
@@ -318,22 +417,26 @@ const CodeEditor = () => {
           </div>
 
           {/* Submission status banner */}
-          {testResult !== "idle" && (
+          {submissionStatus !== "idle" && (
             <div
-              className={`mt-4 p-3.5 rounded-2xl border flex items-center gap-2.5 text-xs font-semibold ${
-                testResult === "passed"
+              className={`mt-4 p-3.5 rounded-2xl border flex items-center justify-between text-xs font-semibold ${
+                submissionStatus === "Accepted"
                   ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-400"
                   : "bg-rose-500/10 border-rose-500/25 text-rose-400"
               }`}
             >
-              {testResult === "passed" ? (
-                <>
-                  <CheckCircle2 size={16} /> Solution Accepted (All test cases passed)
-                </>
-              ) : (
-                <>
-                  <XCircle size={16} /> Wrong Answer on Test Cases
-                </>
+              <div className="flex items-center gap-2">
+                {submissionStatus === "Accepted" ? (
+                  <CheckCircle2 size={16} />
+                ) : (
+                  <XCircle size={16} />
+                )}
+                <span>Solution {submissionStatus}</span>
+              </div>
+              {lastRuntimeMs !== null && (
+                <span className="font-mono text-[11px] opacity-80 flex items-center gap-1">
+                  <Clock size={12} /> {lastRuntimeMs}ms
+                </span>
               )}
             </div>
           )}
@@ -352,11 +455,8 @@ const CodeEditor = () => {
                   onChange={(e) => handleLanguageChange(e.target.value)}
                   className="bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs font-semibold rounded-xl px-3 py-1.5 outline-none hover:border-zinc-700 cursor-pointer"
                 >
-                  <option value="javascript">JavaScript (ES6)</option>
+                  <option value="javascript">JavaScript (Node.js)</option>
                   <option value="python">Python 3</option>
-                  <option value="typescript">TypeScript</option>
-                  <option value="cpp">C++ (GCC)</option>
-                  <option value="java">Java (OpenJDK)</option>
                 </select>
               </div>
 
@@ -384,7 +484,7 @@ const CodeEditor = () => {
               <Editor
                 height="48vh"
                 theme="vs-dark"
-                language={language === "cpp" ? "cpp" : language}
+                language={language}
                 value={code}
                 onChange={(value) => setCode(value || "")}
                 options={{
@@ -401,7 +501,7 @@ const CodeEditor = () => {
             {/* Action Bar */}
             <div className="bg-zinc-950/80 border-t border-zinc-850 p-4 flex flex-wrap items-center justify-between gap-3">
               <span className="text-xs text-zinc-500 font-mono">
-                Tab indentation: 2 spaces
+                {code.split("\n").length} lines · Isolated sandbox execution
               </span>
 
               <div className="flex items-center gap-3">
@@ -448,11 +548,11 @@ const CodeEditor = () => {
                   <div
                     key={idx}
                     className={
-                      log.startsWith("[ERROR]")
+                      log.startsWith("[ERROR]") || log.includes("Failed") || log.includes("Wrong Answer")
                         ? "text-rose-400 font-semibold"
-                        : log.startsWith("[SUCCESS]") || log.includes("Passed")
+                        : log.startsWith("[STATUS]") || log.includes("Passed") || log.includes("ACCEPTED")
                         ? "text-emerald-400 font-semibold"
-                        : log.startsWith("[INFO]")
+                        : log.startsWith("[INFO]") || log.startsWith("[OUTPUT]")
                         ? "text-cyan-400"
                         : "text-zinc-300"
                     }
@@ -461,7 +561,7 @@ const CodeEditor = () => {
                   </div>
                 ))
               ) : (
-                <span className="text-zinc-600 italic">No execution output. Click Run or Submit to see results.</span>
+                <span className="text-zinc-600 italic">No execution output. Click Run or Submit to see real results.</span>
               )}
             </div>
           </div>

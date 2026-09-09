@@ -36,13 +36,9 @@ const Login = () => {
       localStorage.setItem("token", data.token);
       toast.success("Welcome back! Login Successful");
       navigate("/dashboard");
-    } catch (error) {
-      console.warn("Backend server connection failed, entering offline demo mode.", error);
-      toast.success("Offline Demo Mode: Logging in...");
-      localStorage.setItem("token", "demo-offline-jwt-token");
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 800); // 800ms delay
+    } catch (error: any) {
+      const msg = error.response?.data?.message || "Invalid credentials or server connection error.";
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
