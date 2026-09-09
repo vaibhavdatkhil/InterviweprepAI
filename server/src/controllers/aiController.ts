@@ -210,8 +210,13 @@ ${reportedFeedback}`;
       syntaxErrors: localAnalysis.syntaxErrors,
       timeComplexity: localAnalysis.timeComplexity,
       spaceComplexity: localAnalysis.spaceComplexity,
+      complexity: {
+        time: localAnalysis.timeComplexity,
+        space: localAnalysis.spaceComplexity,
+      },
       bugs: reportedBugs,
       improvements: reportedImprovements,
+      suggestions: reportedImprovements,
       feedback: reportedFeedback,
     });
   } catch (error: any) {
@@ -227,7 +232,17 @@ export const getLatestReview = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.userId;
     const latest = await CodeReview.findOne({ userId }).sort({ createdAt: -1 });
-    res.json({ review: latest || null });
+    if (!latest) {
+      return res.json(null);
+    }
+    res.json({
+      ...latest.toObject(),
+      complexity: {
+        time: latest.timeComplexity,
+        space: latest.spaceComplexity,
+      },
+      suggestions: latest.improvements,
+    });
   } catch (error: any) {
     res.status(500).json({ message: "Failed to fetch latest review." });
   }

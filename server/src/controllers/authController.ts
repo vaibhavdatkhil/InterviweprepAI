@@ -11,6 +11,7 @@ const signToken = (id: string): string =>
   jwt.sign({ id }, JWT_SECRET, { expiresIn: "7d" });
 
 const safeUser = (user: any) => ({
+  id: user._id.toString(),
   _id: user._id,
   name: user.name,
   email: user.email,

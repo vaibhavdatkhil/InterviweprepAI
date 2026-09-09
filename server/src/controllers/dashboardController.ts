@@ -71,6 +71,18 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
       .limit(6);
 
     res.json({
+      questionsSolved: progress.questionsSolved,
+      mockInterviews: progress.interviewsCompleted,
+      interviewsCompleted: progress.interviewsCompleted,
+      xp: progress.xp,
+      currentStreak: progress.currentStreak,
+      longestStreak: progress.longestStreak,
+      readinessScore,
+      readinessLabel,
+      latestAtsScore: latestResume ? latestResume.atsScore : null,
+      totalSubmissions,
+      acceptedSubmissions,
+      recentActivity,
       stats: {
         questionsSolved: progress.questionsSolved,
         interviewsCompleted: progress.interviewsCompleted,
@@ -83,7 +95,6 @@ export const getDashboardData = async (req: AuthRequest, res: Response) => {
         totalSubmissions,
         acceptedSubmissions,
       },
-      recentActivity,
     });
   } catch (error: any) {
     console.error("getDashboardData error:", error);
